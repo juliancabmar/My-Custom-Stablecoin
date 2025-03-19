@@ -6,3 +6,5 @@
 3. Collateral Type: Exogenous (using Crypto outside the protpcol)
     1. wETH
     2. wBTC
+
+18/03: 1:00:22:49

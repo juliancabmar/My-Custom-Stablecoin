@@ -57,6 +57,7 @@ contract JSCEngine is ReentrancyGuard {
     mapping(address token => address priceFeed) private s_priceFeeds;
     mapping(address user => mapping(address tokenAddress => uint256 amount)) private s_collateralDeposited;
     mapping(address user => uint256 amountOfJscMinted) private s_jscMinted;
+    address[] private s_colateralTokens;
 
     JuliansStableCoin private immutable i_jsc;
 
@@ -66,7 +67,7 @@ contract JSCEngine is ReentrancyGuard {
 
     //// Errors
 
-    error JSCEngine__NeedsMoreThanZero(); 
+    error JSCEngine__NeedsMoreThanZero();
     error JSCEngine__TokenAddressesAndPriceFeedsAddressesMustBeSameLength();
     error JSCEngine__InvalidTokenAddress();
     error JSCEngine__TransferFailed();
@@ -95,6 +96,7 @@ contract JSCEngine is ReentrancyGuard {
         }
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
             s_priceFeeds[_tokenAddresses[i]] = _priceFeedsAddresses[i];
+            s_colateralTokens.push(_tokenAddresses[i]);
         }
         i_jsc = JuliansStableCoin(_jscAddress);
     }
@@ -108,9 +110,9 @@ contract JSCEngine is ReentrancyGuard {
     function liquidate() external {}
 
     function getHealthFactor() external view {} // get the "collateralization ratio" in MakerDAO
-    
+
     /**
-     * 
+     *
      * @param _amountJscToMint: the amount of JSC to mint
      * @notice they must have more collateral than the minimum threshold required
      */
@@ -119,18 +121,30 @@ contract JSCEngine is ReentrancyGuard {
         // revertIfHealthFactorIsBroken();
     }
 
-    function _userHealthFactor(address _user) private view returns (uint256){
+    function _userHealthFactor(address _user) private view returns (uint256) {
         (uint256 totalJscMinted, uint256 totalCollateralValueInUsd) = _getAccountInformation(_user);
     }
 
-    function _getAccountInformation(address _user) private view returns (uint256 totalJscMinted, uint256 totalCollateralValueInUsd) {
+    function _getAccountInformation(address _user)
+        private
+        view
+        returns (uint256 totalJscMinted, uint256 totalCollateralValueInUsd)
+    {
         totalJscMinted = s_jscMinted[_user];
-        totalCollateralValueInUsd = _getCollateralValueInUsd(_user);
-        
+        totalCollateralValueInUsd = _getCollateralValue(_user);
     }
 
     function _getCollateralValue(address _user) public view returns (uint256 value) {
-        
+        for (uint256 i = 0; i < s_colateralTokens.length; i++) {
+            address token = s_colateralTokens[i];
+            uint256 amount = s_collateralDeposited[_user][token];
+        }
+    }
+
+    function getUsdValue(address _token, uint256 _amount) public view returns (uint256) {
+        address priceFeed = s_priceFeeds[_token];
+        uint256 price = IPriceFeed(priceFeed).getPrice();
+        return price * _amount;
     }
 
     function revertIfHealthFactorIsBroken(address _user) internal view {}

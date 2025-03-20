@@ -1,25 +1,33 @@
 // OUTSIDE CONTRACTS,LIBRARIES or INTERFACES
 // Pragma statements
-// SPDX-License-Identifier: MIT
-
-pragma solidity ^0.8.20;
-
 // Import statements
-import {JuliansStableCoin} from "src/JuliansStableCoin.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {AggregatorV3Interface} from "lib/chainlink-brownie-contracts/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-// import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol"; NOT WORK REMAPING... WHY?
-
-// Events (global)
+// Events
 // Errors (global)
 // Interfaces
 // Libraries
 // Contracts
 
+// INSIDE CONTRACTS,LIBRARIES or INTERFACES
+// Type declarations
+// State variables (#1:Constants, #2:Immutables, #3:Storage)
+// Events
+// Errors (local)
+// Modifiers
+// Functions
 
+// FUNCTION'S ORDER
+// constructor
+// receive function (if exists)
+// fallback function (if exists)
+// external
+// public
+// internal
+// private
+// view & pure functions
 
+// SPDX-License-Identifier: MIT
 
+pragma solidity ^0.8.20;
 
 /**
  * @title JSCEngine
@@ -46,25 +54,25 @@ import {AggregatorV3Interface} from "lib/chainlink-brownie-contracts/contracts/s
 // import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol"; NOT WORK REMAPING... WHY?
 
 contract JSCEngine is ReentrancyGuard {
-// INSIDE CONTRACTS,LIBRARIES or INTERFACES
-// Type declarations
-// State variables (#1:Constants, #2:Immutables, #3:Storage)
+    //// State variables
     uint256 constant LIQUIDATION_THRESHOLD = 50; // Can only mint JSC for 50% of the collateral value.
     uint256 constant LIQUIDATION_PRECISION = 100;
     uint256 constant PRECISION = 1e18;
     uint256 constant MIN_HEALTH_FACTOR = 1;
-
-    JuliansStableCoin private immutable i_jsc;
 
     mapping(address token => address priceFeed) private s_priceFeeds;
     mapping(address user => mapping(address tokenAddress => uint256 amount)) private s_collateralDeposited;
     mapping(address user => uint256 amountOfJscMinted) private s_jscMinted;
     address[] private s_colateralTokens;
 
-// Events
+    JuliansStableCoin private immutable i_jsc;
+
+    //// Events
+
     event CollateralDeposited(address indexed user, address indexed tokenAddress, uint256 indexed amount);
 
-// Errors (local)
+    //// Errors
+
     error JSCEngine__NeedsMoreThanZero();
     error JSCEngine__TokenAddressesAndPriceFeedsAddressesMustBeSameLength();
     error JSCEngine__InvalidTokenAddress();
@@ -72,7 +80,8 @@ contract JSCEngine is ReentrancyGuard {
     error JSCEngine__BrokenHealthFactor(address user, uint256 healthFactor);
     error JSCEngine__MintFailed();
 
-// Modifiers
+    //// Modifiers
+
     modifier moreThanZero(uint256 _amount) {
         if (_amount <= 0) {
             revert JSCEngine__NeedsMoreThanZero();
@@ -87,7 +96,8 @@ contract JSCEngine is ReentrancyGuard {
         _;
     }
 
-// constructor
+    //// Functions
+
     constructor(address[] memory _tokenAddresses, address[] memory _priceFeedsAddresses, address _jscAddress) {
         if (_tokenAddresses.length != _priceFeedsAddresses.length) {
             revert JSCEngine__TokenAddressesAndPriceFeedsAddressesMustBeSameLength();
@@ -98,15 +108,6 @@ contract JSCEngine is ReentrancyGuard {
         }
         i_jsc = JuliansStableCoin(_jscAddress);
     }
-
-// receive function (if exists)
-// fallback function (if exists)
-// external
-// public
-// internal
-// private
-// view & pure functions
-
 
     function depositCollateralAndMintJsc() external {}
 
@@ -120,6 +121,11 @@ contract JSCEngine is ReentrancyGuard {
 
     } // get the "collateralization ratio" in MakerDAO
 
+    /**
+     *
+     * @param _amountJscToMint: the amount of JSC to mint
+     * @notice they must have more collateral than the minimum threshold required
+     */
     function mintJsc(uint256 _amountJscToMint) external moreThanZero(_amountJscToMint) {
         s_jscMinted[msg.sender] += _amountJscToMint;
         _revertIfHealthFactorIsBroken(msg.sender);

@@ -1,0 +1,27 @@
+// OUTSIDE CONTRACTS,LIBRARIES or INTERFACES
+// Pragma statements
+// Import statements
+// Events (global)
+// Errors (global)
+// Interfaces
+// Libraries
+// Contracts
+
+// INSIDE CONTRACTS,LIBRARIES or INTERFACES
+// Type declarations
+// State variables (#1:Constants, #2:Immutables, #3:Storage)
+// Events (local)
+// Errors (local)
+// Modifiers
+// Functions
+
+// FUNCTION'S ORDER
+// constructor
+// receive function (if exists)
+// fallback function (if exists)
+// external
+// public
+// internal
+// private
+// view & pure functions
+

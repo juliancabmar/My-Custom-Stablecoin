@@ -19,9 +19,8 @@
 // constructor
 // receive function (if exists)
 // fallback function (if exists)
-// external
-// public
-// internal
-// private
-// view & pure functions
+// external (#1:state, #2:view, #3:pure)
+// public (#1:state, #2:view, #3:pure)
+// internal (#1:state, #2:view, #3:pure)
+// private (#1:state, #2:view, #3:pure)
 

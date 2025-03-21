@@ -7,6 +7,7 @@ import {DeployJSC} from "script/DeployJSC.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {JuliansStableCoin} from "src/JuliansStableCoin.sol";
 import {JSCEngine} from "src/JSCEngine.sol";
+import {MockERC20} from "../mock/MockERC20.sol";
 
 contract JSCEngineTest is Test {
     DeployJSC private deployer;
@@ -16,10 +17,15 @@ contract JSCEngineTest is Test {
     address ethUsdPriceFeed;
     address wEth;
 
+    address public USER = makeAddr("user");
+    uint256 public constant AMOUNT_COLLATERAL = 10 ether;
+    uint256 public constant STARTING_ERC20_BALANCE = 10 ether;
+
     function setUp() public {
         deployer = new DeployJSC();
         (jsc, jsce, config) = deployer.run();
         (ethUsdPriceFeed, , wEth, , ) = config.activeNetworkConfig();
+        MockERC20(wEth).mint(USER, STARTING_ERC20_BALANCE);
     }
 
     // Price Tests
@@ -32,4 +38,13 @@ contract JSCEngineTest is Test {
     }
 
     // Deposit collateral tests
+
+    function testReverseIfCollateralZero() public {
+        vm.startPrank(USER);
+        MockERC20(wEth).approve(address(jsce), AMOUNT_COLLATERAL);
+
+        vm.expectRevert(JSCEngine.JSCEngine__NeedsMoreThanZero.selector);
+        jsce.depositCollateral(wEth, 0);
+        vm.stopPrank();
+    }
 }

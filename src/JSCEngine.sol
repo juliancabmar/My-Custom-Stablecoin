@@ -56,6 +56,11 @@ contract JSCEngine is ReentrancyGuard {
         address indexed tokenAddress,
         uint256 indexed amount
     );
+    event CollateralRedeemed(
+        address indexed user,
+        address indexed token,
+        uint256 indexed amount
+    );
 
     // Errors (local)
     error JSCEngine__NeedsMoreThanZero();
@@ -97,17 +102,41 @@ contract JSCEngine is ReentrancyGuard {
     }
 
     // receive function (if exists)
+
     // fallback function (if exists)
+
     // external
-    function depositCollateralAndMintJsc() external {}
+    function depositCollateralAndMintJsc(
+        address tokenCollateralAddress,
+        uint256 amountCollateral,
+        uint256 amountJSCToMint
+    ) external {
+        depositCollateral(tokenCollateralAddress, amountCollateral);
+        mintJsc(amountJSCToMint);
+    }
 
     function redeemCollateralFromJsc() external {}
 
+    function redeemCollateral(
+        address tokenCollateralAddress,
+        uint256 amountCollateral
+    ) external moreThanZero(amountCollateral) nonReentrant {
+        s_collateralDeposited[msg.sender][
+            tokenCollateralAddress
+        ] -= amountCollateral;
+        emit CollateralRedeemed(
+            msg.sender,
+            tokenCollateralAddress,
+            amountCollateral
+        );
+    }
+
     function liquidate() external {}
 
+    // public
     function mintJsc(
         uint256 _amountJscToMint
-    ) external moreThanZero(_amountJscToMint) {
+    ) public moreThanZero(_amountJscToMint) {
         s_jscMinted[msg.sender] += _amountJscToMint;
         _revertIfHealthFactorIsBroken(msg.sender);
         bool minted = i_jsc.mint(msg.sender, _amountJscToMint);
@@ -115,8 +144,6 @@ contract JSCEngine is ReentrancyGuard {
             revert JSCEngine__MintFailed();
         }
     }
-
-    // public
 
     function depositCollateral(
         address _tokenForCollateralAddress,

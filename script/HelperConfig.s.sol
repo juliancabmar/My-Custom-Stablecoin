@@ -30,11 +30,7 @@ contract HelperConfig is Script {
         }
     }
 
-    function getSepoliaEthConfig()
-        public
-        view
-        returns (NetworkConfig memory sepoliaNetworkConfig)
-    {
+    function getSepoliaEthConfig() public view returns (NetworkConfig memory sepoliaNetworkConfig) {
         sepoliaNetworkConfig = NetworkConfig({
             wEthUsdPriceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306, // ETH / USD
             wBtcUsdPriceFeed: 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43,
@@ -49,36 +45,19 @@ contract HelperConfig is Script {
             return activeNetworkConfig;
         }
         vm.startBroadcast();
-        MockV3Aggregator wEthUsdPriceFeed = new MockV3Aggregator(
-            DECIMALS,
-            ETH_USD_PRICE
-        );
-        MockERC20 wEthMock = new MockERC20(
-            "Wrapped ETH",
-            "WETH",
-            msg.sender,
-            INITIAL_BALANCE
-        );
+        MockV3Aggregator wEthUsdPriceFeed = new MockV3Aggregator(DECIMALS, ETH_USD_PRICE);
+        MockERC20 wEthMock = new MockERC20("Wrapped ETH", "WETH", msg.sender, INITIAL_BALANCE);
 
-        MockV3Aggregator wBtcUsdPriceFeed = new MockV3Aggregator(
-            DECIMALS,
-            BTC_USD_PRICE
-        );
-        MockERC20 wBtcMock = new MockERC20(
-            "Wrapped BTC",
-            "WBTC",
-            msg.sender,
-            INITIAL_BALANCE
-        );
+        MockV3Aggregator wBtcUsdPriceFeed = new MockV3Aggregator(DECIMALS, BTC_USD_PRICE);
+        MockERC20 wBtcMock = new MockERC20("Wrapped BTC", "WBTC", msg.sender, INITIAL_BALANCE);
         vm.stopBroadcast();
 
-        return
-            NetworkConfig({
-                wEthUsdPriceFeed: address(wEthUsdPriceFeed),
-                wBtcUsdPriceFeed: address(wBtcUsdPriceFeed),
-                wEth: address(wEthMock),
-                wBtc: address(wBtcMock),
-                deployerKey: vm.envUint("ANVIL_PRIVATE_KEY")
-            });
+        return NetworkConfig({
+            wEthUsdPriceFeed: address(wEthUsdPriceFeed),
+            wBtcUsdPriceFeed: address(wBtcUsdPriceFeed),
+            wEth: address(wEthMock),
+            wBtc: address(wBtcMock),
+            deployerKey: vm.envUint("ANVIL_PRIVATE_KEY")
+        });
     }
 }

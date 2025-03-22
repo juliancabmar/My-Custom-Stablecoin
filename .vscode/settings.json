@@ -1,5 +1,7 @@
 {
     "editor.wordWrap": "wordWrapColumn",
-    "editor.wordWrapColumn": 120,
-    "solidity.formatter": "prettier"
+    "editor.wordWrapColumn": 300,
+    "solidity.formatter": "forge",
+    "editor.minimap.maxColumn": 220,
+    "evenBetterToml.formatter.columnWidth": 300
 }

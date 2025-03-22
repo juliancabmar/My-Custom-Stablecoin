@@ -11,29 +11,17 @@ contract DeployJSC is Script {
     address[] public tokenAddresses;
     address[] public priceFeedAddresses;
 
-    function run()
-        external
-        returns (JuliansStableCoin, JSCEngine, HelperConfig)
-    {
+    function run() external returns (JuliansStableCoin, JSCEngine, HelperConfig) {
         HelperConfig config = new HelperConfig();
-        (
-            address wEthUsdPriceFeed,
-            address wBtcUsdPriceFeed,
-            address wEth,
-            address wBtc,
-            uint256 deployerKey
-        ) = config.activeNetworkConfig();
+        (address wEthUsdPriceFeed, address wBtcUsdPriceFeed, address wEth, address wBtc, uint256 deployerKey) =
+            config.activeNetworkConfig();
 
         tokenAddresses = [wEth, wBtc];
         priceFeedAddresses = [wEthUsdPriceFeed, wBtcUsdPriceFeed];
 
         vm.startBroadcast(deployerKey);
         JuliansStableCoin jsc = new JuliansStableCoin();
-        JSCEngine jscEngine = new JSCEngine(
-            tokenAddresses,
-            priceFeedAddresses,
-            address(jsc)
-        );
+        JSCEngine jscEngine = new JSCEngine(tokenAddresses, priceFeedAddresses, address(jsc));
 
         jsc.transferOwnership(address(jscEngine));
         vm.stopBroadcast();

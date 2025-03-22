@@ -16,7 +16,7 @@ contract ForTest is Script {
     function run() external {
         DeployJSC deployer = new DeployJSC();
         (jsc, jsce, config) = deployer.run();
-        (, , address wEth, , ) = config.activeNetworkConfig();
+        (,, address wEth,,) = config.activeNetworkConfig();
 
         console.log(jsce.getUsdValue(wEth, 12e18));
     }

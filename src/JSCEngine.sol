@@ -198,6 +198,10 @@ contract JSCEngine is ReentrancyGuard {
         return ((usdAmountToWei * (10 ** usdDecimals) * PRECISION) / uint256(price));
     }
 
+    function getUserHealthFactor(address _user) public view returns (uint256 healthFactorPercentage) {
+        return _userHealthFactor(_user);
+    }
+
     // internal
 
     function _revertIfHealthFactorIsBroken(address _user) internal view {
@@ -206,8 +210,6 @@ contract JSCEngine is ReentrancyGuard {
             revert JSCEngine__BrokenHealthFactor(_user, userHealthFactor);
         }
     }
-
-    function revertIfHealthFactorIsBroken(address _user) internal view {}
 
     // private
 
@@ -243,6 +245,7 @@ contract JSCEngine is ReentrancyGuard {
 
     function _userHealthFactor(address _user) private view returns (uint256 healthFactorPercentage) {
         (uint256 totalJscMinted, uint256 totalCollateralValueInUsd) = _getAccountInformation(_user);
+        if (totalJscMinted == 0) return type(uint256).max;
         uint256 jscMintLimit = (totalCollateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
         return (jscMintLimit * PRECISION) / totalJscMinted;
     }

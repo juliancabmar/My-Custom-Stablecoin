@@ -34,9 +34,10 @@ contract JSCEngineTest is Test {
     }
 
     modifier depositedCollateralAndMintedJsc() {
+        uint256 expectedTotalJscMinted = 1000;
         vm.startPrank(USER);
         MockERC20(wEth).approve(address(jsce), AMOUNT_COLLATERAL);
-        jsce.depositCollateralAndMintJsc(wEth, AMOUNT_COLLATERAL, 1 ether);
+        jsce.depositCollateralAndMintJsc(wEth, AMOUNT_COLLATERAL, expectedTotalJscMinted);
         vm.stopPrank();
         _;
     }
@@ -57,6 +58,18 @@ contract JSCEngineTest is Test {
 
         vm.expectRevert(JSCEngine.JSCEngine__TokenAddressesAndPriceFeedsAddressesMustBeSameLength.selector);
         new JSCEngine(tokenAddresses, priceFeedAddresses, address(jsc));
+    }
+
+    // Modifiers Tests
+
+    function testModifierMoreThanZero() public {
+        vm.expectRevert(JSCEngine.JSCEngine__NeedsMoreThanZero.selector);
+        jsce.mintJsc(0);
+    }
+
+    function testModifierIsAllowedToken() public {
+        vm.expectRevert(JSCEngine.JSCEngine__InvalidTokenAddress.selector);
+        jsce.depositCollateral(makeAddr("fakeToken"), 1000);
     }
 
     // Price Tests
@@ -148,24 +161,13 @@ contract JSCEngineTest is Test {
         jsce.mintJsc(amountToMint);
         (uint256 totalJscminted,) = jsce.getAccountInformation(USER);
         assertEq(totalJscminted, amountToMint);
-        console.log(amountToMint);
     }
 
-    // function testBurnJsc() public depositedCollateral {
-    //     uint256 amountToMint = jsce.getUsdValue(wEth, AMOUNT_COLLATERAL * 45 / 100);
-    //     vm.startPrank(USER);
-    //     jsce.mintJsc(amountToMint);
-    //     (uint256 totalJscminted,) = jsce.getAccountInformation(USER);
-    //     jsc.approve(address(jsce), totalJscminted);
-    //     jsce.burnJsc(totalJscminted);
-    //     vm.stopPrank();
-    //     // assertEq(totalJscminted, 0);
-    // }
-
     function testBurnJsc() public depositedCollateralAndMintedJsc {
+        (uint256 totalJscMinted,) = jsce.getAccountInformation(USER);
         vm.startPrank(USER);
-        jsc.approve(address(jsce), 1000);
-        jsce.burnJsc(1000);
+        jsc.approve(address(jsce), totalJscMinted);
+        jsce.burnJsc(totalJscMinted);
         vm.stopPrank();
 
         uint256 userBalance = jsc.balanceOf(USER);
@@ -174,9 +176,13 @@ contract JSCEngineTest is Test {
 
     // Reedem Collateral Tests
 
-    // function testRedeemColateral() public depositedCollateral {
-    //     vm.startPrank(USER);
-    //     jsce.redeemCollateral(wEth, AMOUNT_COLLATERAL);
-    //     vm.stopPrank();
-    // }
+    function testRedeemColateral() public depositedCollateral {
+        vm.startPrank(USER);
+        jsce.redeemCollateral(wEth, AMOUNT_COLLATERAL);
+        vm.stopPrank();
+        (, uint256 totalCollateralValueInUsd) = jsce.getAccountInformation(USER);
+        assertEq(totalCollateralValueInUsd, 0);
+    }
+
+    // Liquidation Tests (Liquidation in this code "never" have place because the ratio collateral/debt never will be less than the threshold)
 }

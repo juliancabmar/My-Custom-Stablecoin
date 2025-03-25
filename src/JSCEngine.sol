@@ -175,7 +175,7 @@ contract JSCEngine is ReentrancyGuard {
         _revertIfHealthFactorIsBroken(msg.sender);
     }
 
-    function _getCollateralValue(address _user) public view returns (uint256 totalCollateralValueInUsd) {
+    function getCollateralValue(address _user) public view returns (uint256 totalCollateralValueInUsd) {
         for (uint256 i = 0; i < s_colateralTokens.length; i++) {
             address token = s_colateralTokens[i];
             uint256 amount = s_collateralDeposited[_user][token];
@@ -238,7 +238,7 @@ contract JSCEngine is ReentrancyGuard {
         returns (uint256 totalJscMinted, uint256 totalCollateralValueInUsd)
     {
         totalJscMinted = s_jscMinted[_user];
-        totalCollateralValueInUsd = _getCollateralValue(_user);
+        totalCollateralValueInUsd = getCollateralValue(_user);
     }
 
     function _userHealthFactor(address _user) private view returns (uint256 healthFactorPercentage) {

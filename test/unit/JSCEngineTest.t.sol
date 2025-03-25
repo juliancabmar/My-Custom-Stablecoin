@@ -33,6 +33,14 @@ contract JSCEngineTest is Test {
         _;
     }
 
+    modifier depositedCollateralAndMintedJsc() {
+        vm.startPrank(USER);
+        MockERC20(wEth).approve(address(jsce), AMOUNT_COLLATERAL);
+        jsce.depositCollateralAndMintJsc(wEth, AMOUNT_COLLATERAL, 1 ether);
+        vm.stopPrank();
+        _;
+    }
+
     function setUp() public {
         deployer = new DeployJSC();
         (jsc, jsce, config) = deployer.run();
@@ -95,4 +103,80 @@ contract JSCEngineTest is Test {
         assertEq(totalJscminted, expectedTotalJscMinted);
         assertEq(AMOUNT_COLLATERAL, expectedDepositAmount);
     }
+
+    function testDepositCollateralAndMintJsc() public {
+        uint256 expectedTotalJscMinted = 1000;
+        vm.startPrank(USER);
+        MockERC20(wEth).approve(address(jsce), AMOUNT_COLLATERAL);
+        jsce.depositCollateralAndMintJsc(wEth, AMOUNT_COLLATERAL, expectedTotalJscMinted);
+        vm.stopPrank();
+
+        (uint256 totalJscminted, uint256 collateralValueInUsd) = jsce.getAccountInformation(USER);
+
+        uint256 expectedDepositAmount = jsce.getTokenAmountFromUsd(wEth, collateralValueInUsd);
+
+        assertEq(totalJscminted, expectedTotalJscMinted);
+        assertEq(AMOUNT_COLLATERAL, expectedDepositAmount);
+    }
+
+    function testMoreThanZero() public {
+        vm.expectRevert(JSCEngine.JSCEngine__NeedsMoreThanZero.selector);
+        jsce.depositCollateral(wEth, 0);
+    }
+
+    function testGetAccountInformation() public depositedCollateral {
+        (uint256 totalJscminted, uint256 collateralValueInUsd) = jsce.getAccountInformation(USER);
+
+        uint256 expectedTotalJscMinted = 0;
+        uint256 expectedDepositAmount = jsce.getTokenAmountFromUsd(wEth, collateralValueInUsd);
+
+        assertEq(totalJscminted, expectedTotalJscMinted);
+        assertEq(AMOUNT_COLLATERAL, expectedDepositAmount);
+    }
+
+    function testGetCollateralValue() public depositedCollateral {
+        uint256 actualCollateralValue = jsce.getCollateralValue(USER);
+        uint256 expectesCollateralValue = jsce.getUsdValue(wEth, AMOUNT_COLLATERAL);
+        assertEq(actualCollateralValue, expectesCollateralValue);
+    }
+
+    // Mint and Burn JSC Tests
+
+    function testMintJsc() public depositedCollateral {
+        uint256 amountToMint = jsce.getUsdValue(wEth, AMOUNT_COLLATERAL * 45 / 100);
+        vm.prank(USER);
+        jsce.mintJsc(amountToMint);
+        (uint256 totalJscminted,) = jsce.getAccountInformation(USER);
+        assertEq(totalJscminted, amountToMint);
+        console.log(amountToMint);
+    }
+
+    // function testBurnJsc() public depositedCollateral {
+    //     uint256 amountToMint = jsce.getUsdValue(wEth, AMOUNT_COLLATERAL * 45 / 100);
+    //     vm.startPrank(USER);
+    //     jsce.mintJsc(amountToMint);
+    //     (uint256 totalJscminted,) = jsce.getAccountInformation(USER);
+    //     jsc.approve(address(jsce), totalJscminted);
+    //     jsce.burnJsc(totalJscminted);
+    //     vm.stopPrank();
+    //     // assertEq(totalJscminted, 0);
+    // }
+
+    function testBurnJsc() public depositedCollateralAndMintedJsc {
+        vm.startPrank(USER);
+        jsc.approve(address(jsce), 1000);
+        jsce.burnJsc(1000);
+        vm.stopPrank();
+
+        uint256 userBalance = jsc.balanceOf(USER);
+        assertEq(userBalance, 0);
+    }
+
+    // Reedem Collateral Tests
+
+    // function testRedeemColateral() public depositedCollateral {
+    //     vm.startPrank(USER);
+    //     jsce.redeemCollateral(wEth, AMOUNT_COLLATERAL);
+    //     vm.stopPrank();
+    // }
 }
